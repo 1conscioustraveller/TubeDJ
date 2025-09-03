@@ -23,6 +23,43 @@
         margin-top: 20px;
         display: flex;
         justify-content: space-around;
+        align-items: flex-end;
+        height: 220px;
+      }
+      .controls label {
+        display: block;
+        margin-bottom: 10px;
+        text-align: center;
+        font-weight: bold;
+      }
+      .controls input[type="range"] {
+        -webkit-appearance: none;
+        writing-mode: bt-lr; /* vertical in Chrome/Edge */
+        appearance: slider-vertical;
+        width: 12px;
+        height: 150px;
+        background: #111;
+        border-radius: 6px;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      }
+      .controls input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: #00e0ff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
+        margin-top: -4px;
+      }
+      .controls input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: #00e0ff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
       }
       .crossfader {
         margin-top: 40px;

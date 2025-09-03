@@ -25,8 +25,40 @@
         justify-content: space-around;
       }
       .crossfader {
-        margin-top: 30px;
+        margin-top: 40px;
         text-align: center;
+      }
+      .crossfader input[type="range"] {
+        -webkit-appearance: none;
+        width: 500px;
+        height: 12px;
+        background: #111;
+        border-radius: 6px;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      }
+      .crossfader input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 40px;
+        background: #00e0ff;
+        border-radius: 3px;
+        cursor: pointer;
+        box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
+      }
+      .crossfader input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 40px;
+        background: #00e0ff;
+        border-radius: 3px;
+        cursor: pointer;
+        box-shadow: 0 0 6px #00e0ff, 0 0 12px #00e0ff;
+      }
+      .crossfader label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
       }
       .searchload {
         margin-top: 30px;
@@ -61,7 +93,6 @@
         const [crossfade, setCrossfade] = React.useState(0.5);
         const [videoIds, setVideoIds] = React.useState({ A: "", B: "", C: "", D: "" });
 
-        // Load YouTube API
         React.useEffect(() => {
           const tag = document.createElement("script");
           tag.src = "https://www.youtube.com/iframe_api";
@@ -72,14 +103,13 @@
               playersRef.current[id] = new window.YT.Player(`player-${id}`, {
                 height: "200",
                 width: "300",
-                videoId: "dQw4w9WgXcQ", // placeholder video
+                videoId: "dQw4w9WgXcQ",
                 playerVars: { controls: 1 },
               });
             });
           };
         }, []);
 
-        // Apply effective volume = deck gain * crossfader factor
         const applyVolumes = (xfade, currentVolumes) => {
           const leftFactor = 1 - xfade;
           const rightFactor = xfade;
@@ -101,20 +131,17 @@
           });
         };
 
-        // Handle individual volume slider
         const handleVolume = (deck, value) => {
           const updated = { ...volumes, [deck]: value };
           setVolumes(updated);
           applyVolumes(crossfade, updated);
         };
 
-        // Handle crossfader
         const handleCrossfade = (value) => {
           setCrossfade(value);
           applyVolumes(value, volumes);
         };
 
-        // Extract videoId from YouTube URL
         const extractVideoId = (urlOrId) => {
           try {
             const url = new URL(urlOrId);
@@ -130,7 +157,6 @@
           return urlOrId;
         };
 
-        // Load video into a deck
         const loadVideo = (deck) => {
           const id = extractVideoId(videoIds[deck]);
           const player = playersRef.current[deck];
@@ -141,7 +167,6 @@
 
         return (
           <div>
-            {/* Players */}
             <div className="grid">
               <div id="player-A"></div>
               <div id="player-C"></div>
@@ -149,7 +174,6 @@
               <div id="player-D"></div>
             </div>
 
-            {/* Volume Controls */}
             <div className="controls">
               {["A", "B", "C", "D"].map((deck) => (
                 <div key={deck}>
@@ -165,10 +189,8 @@
               ))}
             </div>
 
-            {/* Crossfader */}
             <div className="crossfader">
               <label>Crossfader (A/B ⇄ C/D)</label>
-              <br />
               <input
                 type="range"
                 min="0"
@@ -176,11 +198,9 @@
                 step="0.01"
                 value={crossfade}
                 onChange={(e) => handleCrossfade(Number(e.target.value))}
-                style={{ width: "400px" }}
               />
             </div>
 
-            {/* Search & Load */}
             <div className="searchload">
               {["A", "B", "C", "D"].map((deck) => (
                 <div key={deck}>

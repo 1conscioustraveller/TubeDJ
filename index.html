@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TubeDJ Test</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        background: #0a2a66;
+        color: #00e0ff;
+        font-family: sans-serif;
+        margin: 0;
+        padding: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .controls {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-around;
+      }
+      .crossfader {
+        margin-top: 30px;
+        text-align: center;
+      }
+      .searchload {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+      input[type="text"] {
+        width: 150px;
+        padding: 5px;
+      }
+      button {
+        margin-top: 5px;
+        padding: 5px 10px;
+        background: #00bcd4;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #00e0ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      function TubeDJ() {
+        const playersRef = React.useRef({});
+        const [volumes, setVolumes] = React.useState({ A: 50, B: 50, C: 50, D: 50 });
+        const [crossfade, setCrossfade] = React.useState(0.5);
+        const [videoIds, setVideoIds] = React.useState({ A: "", B: "", C: "", D: "" });
+
+        // Load YouTube API
+        React.useEffect(() => {
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.body.appendChild(tag);
+
+          window.onYouTubeIframeAPIReady = () => {
+            ["A", "B", "C", "D"].forEach((id) => {
+              playersRef.current[id] = new window.YT.Player(`player-${id}`, {
+                height: "200",
+                width: "300",
+                videoId: "dQw4w9WgXcQ", // placeholder video
+                playerVars: { controls: 1 },
+              });
+            });
+          };
+        }, []);
+
+        // Handle volume change
+        const handleVolume = (deck, value) => {
+          setVolumes((prev) => ({ ...prev, [deck]: value }));
+          const player = playersRef.current[deck];
+          if (player?.setVolume) player.setVolume(value);
+        };
+
+        // Handle crossfade (blends AB vs CD)
+        const handleCrossfade = (value) => {
+          setCrossfade(value);
+          const leftVol = (1 - value) * 100;
+          const rightVol = value * 100;
+
+          ["A", "B"].forEach((deck) => {
+            const player = playersRef.current[deck];
+            if (player?.setVolume) player.setVolume((volumes[deck] / 100) * leftVol);
+          });
+
+          ["C", "D"].forEach((deck) => {
+            const player = playersRef.current[deck];
+            if (player?.setVolume) player.setVolume((volumes[deck] / 100) * rightVol);
+          });
+        };
+
+        // Extract videoId from YouTube URL
+        const extractVideoId = (urlOrId) => {
+          try {
+            const url = new URL(urlOrId);
+            if (url.hostname.includes("youtube.com")) {
+              return url.searchParams.get("v");
+            }
+            if (url.hostname.includes("youtu.be")) {
+              return url.pathname.slice(1);
+            }
+          } catch {
+            return urlOrId; // fallback to assume direct video ID
+          }
+          return urlOrId;
+        };
+
+        // Load video into a deck
+        const loadVideo = (deck) => {
+          const id = extractVideoId(videoIds[deck]);
+          const player = playersRef.current[deck];
+          if (player?.loadVideoById) {
+            player.loadVideoById(id);
+          }
+        };
+
+        return (
+          <div>
+            {/* Players */}
+            <div className="grid">
+              <div id="player-A"></div>
+              <div id="player-C"></div>
+              <div id="player-B"></div>
+              <div id="player-D"></div>
+            </div>
+
+            {/* Volume Controls */}
+            <div className="controls">
+              {["A", "B", "C", "D"].map((deck) => (
+                <div key={deck}>
+                  <label>{deck}</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volumes[deck]}
+                    onChange={(e) => handleVolume(deck, Number(e.target.value))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Crossfader */}
+            <div className="crossfader">
+              <label>Crossfader (A/B ⇄ C/D)</label>
+              <br />
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={crossfade}
+                onChange={(e) => handleCrossfade(Number(e.target.value))}
+                style={{ width: "400px" }}
+              />
+            </div>
+
+            {/* Search & Load */}
+            <div className="searchload">
+              {["A", "B", "C", "D"].map((deck) => (
+                <div key={deck}>
+                  <input
+                    type="text"
+                    placeholder={`YouTube URL/ID for ${deck}`}
+                    value={videoIds[deck]}
+                    onChange={(e) =>
+                      setVideoIds((prev) => ({ ...prev, [deck]: e.target.value }))
+                    }
+                  />
+                  <button onClick={() => loadVideo(deck)}>Load {deck}</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<TubeDJ />);
+    </script>
+  </body>
+</html>

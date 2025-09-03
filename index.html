@@ -86,14 +86,16 @@
 
           ["A", "B"].forEach((deck) => {
             const player = playersRef.current[deck];
-            if (player?.setVolume) {
+            if (player) {
+              if (player.unMute) player.unMute();
               player.setVolume((currentVolumes[deck] / 100) * leftFactor * 100);
             }
           });
 
           ["C", "D"].forEach((deck) => {
             const player = playersRef.current[deck];
-            if (player?.setVolume) {
+            if (player) {
+              if (player.unMute) player.unMute();
               player.setVolume((currentVolumes[deck] / 100) * rightFactor * 100);
             }
           });

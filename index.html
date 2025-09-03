@@ -79,28 +79,37 @@
           };
         }, []);
 
-        // Handle volume change
-        const handleVolume = (deck, value) => {
-          setVolumes((prev) => ({ ...prev, [deck]: value }));
-          const player = playersRef.current[deck];
-          if (player?.setVolume) player.setVolume(value);
-        };
-
-        // Handle crossfade (blends AB vs CD)
-        const handleCrossfade = (value) => {
-          setCrossfade(value);
-          const leftVol = (1 - value) * 100;
-          const rightVol = value * 100;
+        // Apply effective volume = deck gain * crossfader factor
+        const applyVolumes = (xfade, currentVolumes) => {
+          const leftFactor = 1 - xfade;
+          const rightFactor = xfade;
 
           ["A", "B"].forEach((deck) => {
             const player = playersRef.current[deck];
-            if (player?.setVolume) player.setVolume((volumes[deck] / 100) * leftVol);
+            if (player?.setVolume) {
+              player.setVolume((currentVolumes[deck] / 100) * leftFactor * 100);
+            }
           });
 
           ["C", "D"].forEach((deck) => {
             const player = playersRef.current[deck];
-            if (player?.setVolume) player.setVolume((volumes[deck] / 100) * rightVol);
+            if (player?.setVolume) {
+              player.setVolume((currentVolumes[deck] / 100) * rightFactor * 100);
+            }
           });
+        };
+
+        // Handle individual volume slider
+        const handleVolume = (deck, value) => {
+          const updated = { ...volumes, [deck]: value };
+          setVolumes(updated);
+          applyVolumes(crossfade, updated);
+        };
+
+        // Handle crossfader
+        const handleCrossfade = (value) => {
+          setCrossfade(value);
+          applyVolumes(value, volumes);
         };
 
         // Extract videoId from YouTube URL
@@ -114,7 +123,7 @@
               return url.pathname.slice(1);
             }
           } catch {
-            return urlOrId; // fallback to assume direct video ID
+            return urlOrId;
           }
           return urlOrId;
         };
@@ -173,6 +182,8 @@
             <div className="searchload">
               {["A", "B", "C", "D"].map((deck) => (
                 <div key={deck}>
+                  <label>Paste YT URL:</label>
+                  <br />
                   <input
                     type="text"
                     placeholder={`YouTube URL/ID for ${deck}`}
